@@ -1,4 +1,4 @@
 node_modules
 electron-builder.yml
-dist/mac/
+dist/mac
 .DS_Store

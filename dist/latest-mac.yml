@@ -1,0 +1,10 @@
+version: 1.0.0
+files:
+  - url: picture-code-checker-1.0.0-mac.zip
+    sha512: egqqI1d+l2+VaYD7Il6eKomgmVt/FNCCd/g763rd3awpUhBSruzgc8y3R/y67DreWJLur+Q/1G9JZ1voIPAKDw==
+  - url: picture-code-checker-1.0.0.dmg
+    sha512: 935JfIBhQXmSAF1KCug0IYR7E18aP6vCWx6Lh0l2O6Fwxo0CranfdeMTxBQMRLEESjutOxfg0kW26ru7GG9VLQ==
+    size: 50470215
+path: picture-code-checker-1.0.0-mac.zip
+sha512: egqqI1d+l2+VaYD7Il6eKomgmVt/FNCCd/g763rd3awpUhBSruzgc8y3R/y67DreWJLur+Q/1G9JZ1voIPAKDw==
+releaseDate: '2018-09-21T14:57:38.233Z'

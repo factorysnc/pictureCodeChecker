@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>App Factory</title>
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+  <main class="container p-3">
+    <h1>App Factory</h1>
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="upload-codes-tab" data-toggle="tab" href="#upload-codes" role="tab" aria-controls="upload-codes" aria-selected="true">Carica Codici</a>
+        <a class="nav-item nav-link" id="search-code-tab" data-toggle="tab" href="#search-code" role="tab" aria-controls="search-code" aria-selected="false">Cerca Codice</a>
+      </div>
+    </nav>
+    <div class="tab-content px-2" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="upload-codes" role="tabpanel" aria-labelledby="upload-codes-tab">
+        <div class="mt-4">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="inputGroupSelect01">Brand</label>
+            </div>
+            <select class="custom-select" id="brand-select">
+              <option value="" selected>Scegli Brand</option>
+              <option value="alberta-ferretti">Alberta Ferretti</option>
+              <option value="cedric-charlier">Cédric Charlier</option>
+              <option value="jeremy-scott">Jeremy Scott</option>
+              <option value="moschino">Moschino</option>
+              <option value="philosophy">Philosophy</option>
+              <option value="pollini">Pollini</option>
+            </select>
+          </div>
+          <label for="file"><input type="radio" id="file" name="code-type" value="file" class="mr-2" checked>File</label>
+          <br>
+          <label for="folder"><input type="radio" id="folder" name="code-type" value="folder" class="mr-2">Cartella</label>
+        </div>
+        <button class="btn btn-primary my-4" id="uploadCodesBtn">Carica Lista Codici</button>
+        <!-- TODO: Add loading UI -->
+        <div class="alert alert-success d-none" role="alert" id="upload-success-alert">Upload Completato</div>
+        <div class="alert alert-danger d-none" role="alert" id="upload-danger-alert">Impossibile completare l'upload</div>
+      </div>
+      <div class="tab-pane fade" id="search-code" role="tabpanel" aria-labelledby="search-code-tab">
+        <div class="input-group my-4">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Codice:</span>
+          </div>
+          <input type="text" id="code-to-search" class="form-control" placeholder="" aria-label="Codice" aria-describedby="basic-addon2">
+          <div class="input-group-append">
+            <button class="btn btn-outline-primary" type="button" id="searchCodeBtn">Cerca</button>
+          </div>
+        </div>
+        <div class="alert alert-success d-none" role="alert" id="search-success-alert"></div>
+        <div class="alert alert-danger d-none" role="alert" id="search-danger-alert"></div>
+        <div id="codes-list"></div>
+      </div>
+    </div>
+  </main>
+  <script>
+    require('./renderer.js')
+    window.$ = window.jquery = require("jquery");
+    window.popper = require("popper.js");
+    require("bootstrap");
+    const remote = require('electron').remote;
+    const remoteFs = remote.require('fs');
+    const remotePath = remote.require('path');
+    const {app, BrowserWindow, ipcMain} = remote.require('electron');
+    const urlRoot = "https://electron.factorysnc.com/wp-json/factorysnc/electron/v1/";
+    const {autoUpdater} = remote.require("electron-updater");
+    var codesArray = [];
+    var uploadUrl = urlRoot + "registerPictures";
+    var searchUrl = urlRoot + "checkIfPictureExists";
+
+    remote.getCurrentWindow().setMinimumSize(500, 500);
+
+    function createDefaultWindow() {
+      window = new BrowserWindow({
+        width: 900,
+        height: 680
+      });
+      window.loadURL(`file://${__dirname}/index.html`);
+      window.on('closed', () => app.quit());
+      return win;
+    }
+
+    app.on('ready', function() {
+      createDefaultWindow()
+      autoUpdater.checkForUpdates();
+    });
+
+    // when the update has been downloaded and is ready to be installed, notify the BrowserWindow
+    autoUpdater.on('update-downloaded', (info) => {
+      win.webContents.send('updateReady')
+    });
+
+    // when receiving a quitAndInstall signal, quit and install the new version ;)
+    ipcMain.on("quitAndInstall", (event, arg) => {
+      autoUpdater.quitAndInstall();
+    });
+    /*
+     * Get only method of dialog key inside remote
+     * const {dialog} = require('electron').remote;
+     */
+
+    /*
+     * Upload codes ajax
+     */
+
+    $('#uploadCodesBtn').click(function(event) {
+      $("#upload-success-alert").addClass('d-none');
+      $("#upload-danger-alert").addClass('d-none');
+      codesArray = [];
+      var selectedType = $("input[name='code-type']:checked").val();
+      var selectedBrand = $("#brand-select").val();
+      if (selectedBrand == "") {
+        remote.dialog.showErrorBox("Impossibile eseguire l'upload", "Selezionare prima un brand");
+        $('#uploadCodesBtn').attr('disabled', false);
+      } else {
+        remote.dialog.showOpenDialog({
+          // defaultPath: remote.app.getPath('desktop'),
+          properties: ['openDirectory']
+        }, function(files) {
+          $('#uploadCodesBtn').attr('disabled', true);
+          if (files !== undefined) {
+            if (selectedType == 'folder') {
+              fromDir(files, true);
+            } else {
+              fromDir(files);
+            }
+            var request = {
+              pictures: codesArray,
+              brand: selectedBrand,
+            };
+            $.ajax({
+              type: 'POST',
+              url: uploadUrl,
+              data: request,
+              dataType: 'json',
+              success: function(response) {
+                console.log("Upload response", response);
+                $("#upload-success-alert").removeClass('d-none');
+              },
+              error: function(xhr, status, error) {
+                var err = JSON.parse(xhr.responseText);
+                remote.dialog.showErrorBox("Error " + err.data.status, err.message);
+                $("#upload-danger-alert").removeClass('d-none');
+              },
+              complete: function() {
+                $('#uploadCodesBtn').attr('disabled', false);
+              }
+            });
+          } else {
+            $('#uploadCodesBtn').attr('disabled', false);
+          }
+        });
+      }
+    });
+
+
+    /*
+     * Search code ajax
+     */
+
+    $('#searchCodeBtn').click(function(event) {
+      $("#search-success-alert").addClass('d-none');
+      $("#search-danger-alert").addClass('d-none');
+      $('#searchCodeBtn').attr('disabled', true);
+      $('#codes-list').html('');
+      var codeToSearch = $('#code-to-search').val();
+      if (codeToSearch == "") {
+        remote.dialog.showErrorBox("Impossibile completare l'operazione", "Non è stato inserito alcun codice da ricercare");
+        $('#searchCodeBtn').attr('disabled', false);
+      } else {
+        var request = {
+          picture_name: encodeURI(codeToSearch),
+        };
+        $('#search-success-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " trovato");
+        $('#search-danger-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " non trovato");
+        $.ajax({
+          type: 'GET',
+          url: searchUrl,
+          data: request,
+          dataType: 'json',
+          success: function(response) {
+            console.log("Search response", response);
+            if (!response.exists) {
+              $('#search-success-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " non trovato").removeClass('d-none');
+            } else {
+              var tableStr = "<table class='table table-striped text-center'><thead><tr><th>Codice</th><th>Brand</th></tr></thead><tbody>";
+              response.pictures.forEach(function(element) {
+                tableStr += "<tr><td>" + element.picture_name + "</td><td>" + capital_letter(element.brand.replace('-', ' ')) + "</td></tr>";
+              });
+              tableStr += "</tbody>";
+              tableStr += "</table>";
+              $('#codes-list').append(tableStr);
+              $('#search-danger-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " trovato").removeClass('d-none');
+            }
+          },
+          error: function(xhr, status, error) {
+            var err = JSON.parse(xhr.responseText);
+            remote.dialog.showErrorBox("Error " + err.data.status, err.message);
+          },
+          complete: function() {
+            $('#searchCodeBtn').attr('disabled', false);
+          }
+        });
+      }
+    });
+
+
+    /*
+     * List all subfolders and file starting from a path
+     */
+
+    function fromDir(startPath, onlyFolders = false) {
+      if (!remoteFs.existsSync(startPath + '/')) return;
+      var foundFiles = remoteFs.readdirSync(startPath + '/');
+      for (var i = 0; i < foundFiles.length; i++) {
+        var filename = remotePath.join(startPath + '/', foundFiles[i]);
+        var stat = remoteFs.lstatSync(filename);
+        if (stat.isDirectory()) {
+          if (onlyFolders) {
+            codesArray.push(foundFiles[i]);
+          }
+          fromDir(filename, onlyFolders);
+        } else if (!onlyFolders) {
+          if (!isUnixHiddenPath(filename)) {
+            codesArray.push(foundFiles[i].replace(/\.[^/.]+$/, ""));
+          }
+        }
+      }
+    }
+
+    /*
+     * Check if file is hidden (filename start with period)
+     */
+
+    function isUnixHiddenPath(path) {
+      return (/(^|\/)\.[^\/\.]/g).test(path);
+    }
+
+    /*
+     * Capitalize String
+     */
+
+    function capital_letter(str) {
+      str = str.split(" ");
+      for (var i = 0, x = str.length; i < x; i++) {
+        str[i] = str[i][0].toUpperCase() + str[i].substr(1);
+      }
+      return str.join(" ");
+    }
+  </script>
+</body>
+
+</html>

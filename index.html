@@ -66,14 +66,81 @@
     const remote = require('electron').remote;
     const remoteFs = remote.require('fs');
     const remotePath = remote.require('path');
-    const {app, BrowserWindow, ipcMain} = remote.require('electron');
+    const {
+      app,
+      BrowserWindow,
+      ipcMain,
+      Menu
+    } = remote.require('electron');
     const urlRoot = "https://electron.factorysnc.com/wp-json/factorysnc/electron/v1/";
-    const {autoUpdater} = remote.require("electron-updater");
+    const {
+      autoUpdater
+    } = remote.require("electron-updater");
     var codesArray = [];
     var uploadUrl = urlRoot + "registerPictures";
     var searchUrl = urlRoot + "checkIfPictureExists";
 
+
     remote.getCurrentWindow().setMinimumSize(500, 500);
+
+    /*
+     * Menu Voices
+     */
+    var template = [{
+      label: "Picture Code Checker",
+      submenu: [{
+          label: "About Application",
+          selector: "orderFrontStandardAboutPanel:"
+        },
+        {
+          type: "separator"
+        },
+        {
+          label: "Quit",
+          accelerator: "Command+Q",
+          click: function() {
+            app.quit();
+          }
+        }
+      ]
+    }, {
+      label: "Modifica",
+      submenu: [{
+          label: "Annulla",
+          accelerator: "CmdOrCtrl+Z",
+          selector: "undo:"
+        },
+        {
+          label: "Ripristina",
+          accelerator: "Shift+CmdOrCtrl+Z",
+          selector: "redo:"
+        },
+        {
+          type: "separator"
+        },
+        {
+          label: "Taglia",
+          accelerator: "CmdOrCtrl+X",
+          selector: "cut:"
+        },
+        {
+          label: "Copia",
+          accelerator: "CmdOrCtrl+C",
+          selector: "copy:"
+        },
+        {
+          label: "Incolla",
+          accelerator: "CmdOrCtrl+V",
+          selector: "paste:"
+        },
+        {
+          label: "Seleziona tutto",
+          accelerator: "CmdOrCtrl+A",
+          selector: "selectAll:"
+        }
+      ]
+    }];
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
     function createDefaultWindow() {
       window = new BrowserWindow({
@@ -88,26 +155,6 @@
     app.on('ready', function() {
       createDefaultWindow()
       autoUpdater.checkForUpdates();
-      var template = [{
-        label: "Application",
-        submenu: [
-            { label: "About Application", selector: "orderFrontStandardAboutPanel:" },
-            { type: "separator" },
-            { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
-        ]}, {
-        label: "Edit",
-        submenu: [
-            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
-            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
-            { type: "separator" },
-            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
-            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
-            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
-            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
-        ]}
-    ];
-
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
     });
 
     // when the update has been downloaded and is ready to be installed, notify the BrowserWindow
@@ -226,6 +273,16 @@
             $('#searchCodeBtn').attr('disabled', false);
           }
         });
+      }
+    });
+
+    $('#code-to-search').on("keyup", function(event) {
+      // Cancel the default action, if needed
+      event.preventDefault();
+      // Number 13 is the "Enter" key on the keyboard
+      if (event.keyCode === 13) {
+        // Trigger the button element with a click
+        $('#searchCodeBtn').trigger('click');
       }
     });
 

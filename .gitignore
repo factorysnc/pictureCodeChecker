@@ -1,4 +1,4 @@
 node_modules
 electron-builder.yml
-dist/mac/picture-code-checker.app/Contents/Resources/app-update.yml
+dist/mac/
 .DS_Store

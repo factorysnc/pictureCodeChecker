@@ -101,6 +101,7 @@
     const remotePath = remote.require('path');
     const ipcRenderer = require('electron').ipcRenderer;
     const {
+      app,
       Menu
     } = remote.require('electron');
     const urlRoot = "https://electron.factorysnc.com/wp-json/factorysnc/electron/v1/";
@@ -129,7 +130,7 @@
      //         {role: 'selectall'}
      //       ]
      //     },
-     const template = [
+     var  template = [
      {
        label: 'Edit',
        submenu: [
@@ -144,7 +145,7 @@
          {role: 'selectall'}
        ]
      }
-   ]
+   ];
 
    if (process.platform === 'darwin') {
      template.unshift({
@@ -175,13 +176,13 @@
      )
 
      // Window menu
-     template[3].submenu = [
-       {role: 'close'},
-       {role: 'minimize'},
-       {role: 'zoom'},
-       {type: 'separator'},
-       {role: 'front'}
-     ]
+     // template[3].submenu = [
+     //   {role: 'close'},
+     //   {role: 'minimize'},
+     //   {role: 'zoom'},
+     //   {type: 'separator'},
+     //   {role: 'front'}
+     // ]
    }
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 

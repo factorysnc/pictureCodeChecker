@@ -314,7 +314,7 @@
     var uploadUrl = urlRoot + "registerPictures";
     var searchUrl = urlRoot + "checkIfPictureExists";
 
-
+    console.log(app);
     remote.getCurrentWindow().setMinimumSize(500, 500);
 
     /*
@@ -385,25 +385,6 @@
       window.on('closed', () => app.quit());
       return win;
     }
-
-    app.on('ready', function() {
-      createDefaultWindow()
-      autoUpdater.checkForUpdates();
-    });
-
-    // when the update has been downloaded and is ready to be installed, notify the BrowserWindow
-    autoUpdater.on('update-downloaded', (info) => {
-      win.webContents.send('updateReady')
-    });
-
-    // when receiving a quitAndInstall signal, quit and install the new version ;)
-    ipcMain.on("quitAndInstall", (event, arg) => {
-      autoUpdater.quitAndInstall();
-    });
-    /*
-     * Get only method of dialog key inside remote
-     * const {dialog} = require('electron').remote;
-     */
 
     /*
      * Upload codes ajax

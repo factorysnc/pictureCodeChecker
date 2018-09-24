@@ -1,7 +1,7 @@
 {
   "name": "Picture-Code-Checker",
   "productName": "Picture Code Checker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {

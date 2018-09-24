@@ -178,7 +178,9 @@
               success: function(response) {
                 console.log("Upload response", response);
                 $("#upload-success-alert").removeClass('d-none');
-                $('#brand-select').append('<option value="' + newBrand + '">' + newBrand + '</option>');
+                if(newBrand != ""){
+                  $('#brand-select').append('<option value="' + newBrand + '">' + newBrand + '</option>');
+                }
                 $("#new-brand-input").val('');
               },
               error: function(xhr, status, error) {

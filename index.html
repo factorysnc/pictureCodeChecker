@@ -27,18 +27,20 @@
         <div class="mt-4">
           <div class="input-group mb-3">
             <div class="input-group-prepend">
-              <label class="input-group-text" for="inputGroupSelect01">Brand</label>
+              <label class="input-group-text" for="brand-select">Seleziona un Brand</label>
             </div>
             <select class="custom-select" id="brand-select">
-              <option value="" selected>Scegli Brand</option>
-              <option value="alberta-ferretti">Alberta Ferretti</option>
-              <option value="cedric-charlier">Cédric Charlier</option>
-              <option value="jeremy-scott">Jeremy Scott</option>
-              <option value="moschino">Moschino</option>
-              <option value="philosophy">Philosophy</option>
-              <option value="pollini">Pollini</option>
+              <option value="" selected>Brand</option>
             </select>
           </div>
+          <p>Oppure</p>
+          <div class="input-group mb-5">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="new-brand-input">Aggiungi un nuovo brand</label>
+            </div>
+            <input type="text" id="new-brand-input" class="form-control">
+          </div>
+          <small class="d-block mb-3">Se i codici corrispondono ai nomi delle immagini seleziona "File". Altrimenti seleziona "Cartella"</small>
           <label for="file"><input type="radio" id="file" name="code-type" value="file" class="mr-2" checked>File</label>
           <br>
           <label for="folder"><input type="radio" id="folder" name="code-type" value="folder" class="mr-2">Cartella</label>
@@ -105,82 +107,33 @@
     var codesArray = [];
     var uploadUrl = urlRoot + "registerPictures";
     var searchUrl = urlRoot + "checkIfPictureExists";
+    var retriveBrandsUrl = urlRoot + "retriveBrands";
     var appVersion = require('electron').remote.app.getVersion();
     remote.getCurrentWindow().setMinimumSize(500, 500);
 
     $('#version').html(appVersion);
+    console.log(ipcRenderer);
     ipcRenderer.on('updateReady', function(event, text) {
+      console.log("Update Ready");
         $('#update-info').removeClass('d-none');
     });
 
-    /*
-     * Menu Voices
-     */
-    var template = [{
-      label: "Picture Code Checker",
-      submenu: [{
-          label: "About Application",
-          selector: "orderFrontStandardAboutPanel:"
-        },
-        {
-          type: "separator"
-        },
-        {
-          label: "Quit",
-          accelerator: "Command+Q",
-          click: function() {
-            app.quit();
-          }
-        }
-      ]
-    }, {
-      label: "Modifica",
-      submenu: [{
-          label: "Annulla",
-          accelerator: "CmdOrCtrl+Z",
-          selector: "undo:"
-        },
-        {
-          label: "Ripristina",
-          accelerator: "Shift+CmdOrCtrl+Z",
-          selector: "redo:"
-        },
-        {
-          type: "separator"
-        },
-        {
-          label: "Taglia",
-          accelerator: "CmdOrCtrl+X",
-          selector: "cut:"
-        },
-        {
-          label: "Copia",
-          accelerator: "CmdOrCtrl+C",
-          selector: "copy:"
-        },
-        {
-          label: "Incolla",
-          accelerator: "CmdOrCtrl+V",
-          selector: "paste:"
-        },
-        {
-          label: "Seleziona tutto",
-          accelerator: "CmdOrCtrl+A",
-          selector: "selectAll:"
-        }
-      ]
-    }];
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    $.ajax({
+      type: "GET",
+      url: retriveBrandsUrl,
+      dataType: 'json',
+      success: function(response){
+        response.brands.forEach(function(element){
+          console.log(element.brand);
+          $('#brand-select').append('<option value="' + element.brand + '">' + element.brand + '</option>');
+        });
+      },
+      error: function(xhr, status, error) {
+        var err = JSON.parse(xhr.responseText);
+        remote.dialog.showErrorBox("Error " + err.data.status, err.message);
+      },
+    });
 
-    function createDefaultWindow() {
-      window = new BrowserWindow({
-        width: 900,
-        height: 680
-      });
-      window.loadURL(`file://${__dirname}/index.html`);
-      window.on('closed', () => app.quit());
-      return win;
-    }
 
     /*
      * Upload codes ajax
@@ -192,8 +145,9 @@
       codesArray = [];
       var selectedType = $("input[name='code-type']:checked").val();
       var selectedBrand = $("#brand-select").val();
-      if (selectedBrand == "") {
-        remote.dialog.showErrorBox("Impossibile eseguire l'upload", "Selezionare prima un brand");
+      var newBrand = $("#new-brand-input").val();
+      if (selectedBrand == "" && newBrand == "") {
+        remote.dialog.showErrorBox("Impossibile eseguire l'upload", "Selezionare un brand o aggiungerne uno nuovo");
         $('#uploadCodesBtn').attr('disabled', false);
       } else {
         remote.dialog.showOpenDialog({
@@ -210,8 +164,12 @@
             }
             var request = {
               pictures: codesArray,
-              brand: selectedBrand,
             };
+            if(selectedBrand != ""){
+              request.brand = selectedBrand;
+            } else if(newBrand != ""){
+              request.brand = newBrand;
+            }
             $.ajax({
               type: 'POST',
               url: uploadUrl,
@@ -220,6 +178,8 @@
               success: function(response) {
                 console.log("Upload response", response);
                 $("#upload-success-alert").removeClass('d-none');
+                $('#brand-select').append('<option value="' + newBrand + '">' + newBrand + '</option>');
+                $("#new-brand-input").val('');
               },
               error: function(xhr, status, error) {
                 var err = JSON.parse(xhr.responseText);

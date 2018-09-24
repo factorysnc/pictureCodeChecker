@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, Menu} = require('electron');
 const {autoUpdater} = require('electron-updater');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -58,7 +58,67 @@ app.on('activate', function () {
   if (mainWindow === null) {
     createWindow()
   }
-})
+});
+
+
+/*
+ * Menu Voices
+ */
+var template = [{
+  label: "Picture Code Checker",
+  submenu: [{
+      label: "About Application",
+      selector: "orderFrontStandardAboutPanel:"
+    },
+    {
+      type: "separator"
+    },
+    {
+      label: "Quit",
+      accelerator: "Cmd+Q",
+      click: function() {
+        app.quit();
+      }
+    }
+  ]
+}, {
+  label: "Modifica",
+  submenu: [{
+      label: "Annulla",
+      accelerator: "CmdOrCtrl+Z",
+      selector: "undo:"
+    },
+    {
+      label: "Ripristina",
+      accelerator: "Shift+CmdOrCtrl+Z",
+      selector: "redo:"
+    },
+    {
+      type: "separator"
+    },
+    {
+      label: "Taglia",
+      accelerator: "CmdOrCtrl+X",
+      selector: "cut:"
+    },
+    {
+      label: "Copia",
+      accelerator: "CmdOrCtrl+C",
+      selector: "copy:"
+    },
+    {
+      label: "Incolla",
+      accelerator: "CmdOrCtrl+V",
+      selector: "paste:"
+    },
+    {
+      label: "Seleziona tutto",
+      accelerator: "CmdOrCtrl+A",
+      selector: "selectAll:"
+    }
+  ]
+}];
+// Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

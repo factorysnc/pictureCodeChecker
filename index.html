@@ -301,20 +301,12 @@
     const remoteFs = remote.require('fs');
     const remotePath = remote.require('path');
     const {
-      app,
-      BrowserWindow,
-      ipcMain,
       Menu
     } = remote.require('electron');
     const urlRoot = "https://electron.factorysnc.com/wp-json/factorysnc/electron/v1/";
-    const {
-      autoUpdater
-    } = remote.require("electron-updater");
     var codesArray = [];
     var uploadUrl = urlRoot + "registerPictures";
     var searchUrl = urlRoot + "checkIfPictureExists";
-
-    console.log(app);
     remote.getCurrentWindow().setMinimumSize(500, 500);
 
     /*
@@ -374,7 +366,7 @@
         }
       ]
     }];
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    // Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
     function createDefaultWindow() {
       window = new BrowserWindow({

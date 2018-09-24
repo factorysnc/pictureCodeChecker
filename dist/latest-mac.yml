@@ -1,10 +1,10 @@
-version: 1.0.4
+version: 1.0.5
 files:
-  - url: Picture-Code-Checker-1.0.4-mac.zip
-    sha512: zk62prGMpr2Eg77Gj9xIvMNbOf8CkxqhbQVZMfhu+6lebKjZVuX7NsX9iwWVP7EsTCH7m8vaKO/l5DZv5zWexg==
-  - url: Picture-Code-Checker-1.0.4.dmg
-    sha512: 9U1B8FDFLz/GT8u+zqp8sDPipNxUa5JqkBlgDAWaTveMVKLYh6UEm0R77SWG0nzM+OfoKFRpCD3oaePDKK8ezA==
-    size: 50464410
-path: Picture-Code-Checker-1.0.4-mac.zip
-sha512: zk62prGMpr2Eg77Gj9xIvMNbOf8CkxqhbQVZMfhu+6lebKjZVuX7NsX9iwWVP7EsTCH7m8vaKO/l5DZv5zWexg==
-releaseDate: '2018-09-24T07:49:35.449Z'
+  - url: Picture-Code-Checker-1.0.5-mac.zip
+    sha512: oxJmU1OV4kvEZ7Tkvw299esBYh1leGEUgel63Hc2M4zqoWG2E1mbivIagA2yspgF4oil8dXZaurs69XmIxfbug==
+  - url: Picture-Code-Checker-1.0.5.dmg
+    sha512: C7FSFl4x8Tgbp6i27gkYTpSNnGRIl3SQ7wQVzqlqLFQZQ7U5N5Yvksry+Ds8H+trPSVsvEN4INk0Ah9HNJRltQ==
+    size: 50464344
+path: Picture-Code-Checker-1.0.5-mac.zip
+sha512: oxJmU1OV4kvEZ7Tkvw299esBYh1leGEUgel63Hc2M4zqoWG2E1mbivIagA2yspgF4oil8dXZaurs69XmIxfbug==
+releaseDate: '2018-09-24T07:53:44.896Z'

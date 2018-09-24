@@ -219,6 +219,11 @@
   </style>
   <main class="container p-3">
     <h1>App Factory</h1>
+    <!-- the button onClick sends a quitAndInstall message to the electron main process -->
+    <div id="update-info" class="d-none my-5">
+      <p>È disponibile una nuova versione</p>
+      <button class="btn btn-outline-primary" onClick="ipcRenderer.send('quitAndInstall')">Install Updates</button>
+    </div>
     <nav>
       <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <a class="nav-item nav-link active" id="upload-codes-tab" data-toggle="tab" href="#upload-codes" role="tab" aria-controls="upload-codes" aria-selected="true">Carica Codici</a>
@@ -300,6 +305,7 @@
     const remote = require('electron').remote;
     const remoteFs = remote.require('fs');
     const remotePath = remote.require('path');
+    const ipcRenderer = require('electron').ipcRenderer;
     const {
       Menu
     } = remote.require('electron');
@@ -307,7 +313,16 @@
     var codesArray = [];
     var uploadUrl = urlRoot + "registerPictures";
     var searchUrl = urlRoot + "checkIfPictureExists";
+    var appVersion = require('electron').remote.app.getVersion();
     remote.getCurrentWindow().setMinimumSize(500, 500);
+
+    $('#version').html(appVersion);
+    // wait for an updateReady message
+    ipcRenderer.on('updateReady', function(event, text) {
+        // changes the text of the button
+        var container = document.getElementById('update-info');
+        $('#update-info').removeClass('d-none');
+    });
 
     /*
      * Menu Voices
@@ -366,7 +381,7 @@
         }
       ]
     }];
-    // Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
     function createDefaultWindow() {
       window = new BrowserWindow({

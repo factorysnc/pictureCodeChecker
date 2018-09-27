@@ -6,6 +6,7 @@
   <title>App Factory</title>
   <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="assets/css/custom.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"/>
 </head>
 
 <body>
@@ -105,6 +106,7 @@
     window.$ = window.jquery = require("jquery");
     window.popper = require("popper.js");
     require("bootstrap");
+    require( 'datatables.net' )( window, $ );
     const remote = require('electron').remote;
     const remoteFs = remote.require('fs');
     const remotePath = remote.require('path');
@@ -126,20 +128,7 @@
     /*
      * Menu Voices
      */
-    // {
-    //       label: 'Edit',
-    //       submenu: [
-    //         {role: 'undo'},
-    //         {role: 'redo'},
-    //         {type: 'separator'},
-    //         {role: 'cut'},
-    //         {role: 'copy'},
-    //         {role: 'paste'},
-    //         {role: 'pasteandmatchstyle'},
-    //         {role: 'delete'},
-    //         {role: 'selectall'}
-    //       ]
-    //     },
+
     var template = [{
       label: 'Edit',
       submenu: [{
@@ -219,17 +208,8 @@
           }
         ]
       })
-
-      // Window menu
-      // template[3].submenu = [
-      //   {role: 'close'},
-      //   {role: 'minimize'},
-      //   {role: 'zoom'},
-      //   {type: 'separator'},
-      //   {role: 'front'}
-      // ]
     }
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    // Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
     $('#version').html(appVersion);
     console.log(ipcRenderer);
@@ -359,14 +339,12 @@
               } else {
                 messageHtml = "Codice <strong>" + codeToSearch + "</strong> non trovato";
               }
-              // $('#search-success-alert').html(successHtml).removeClass('d-none');
             } else {
               if ("" != selectedSearchBrand) {
                 messageHtml = "Nessun codice trovato per il brand <strong>" + selectedSearchBrand + "</strong>";
               } else {
                 messageHtml = "Nessun Codice Trovato";
               }
-              // $('#search-alert').html(messageHtml);
             }
             $('#search-alert').html(messageHtml).removeClass('d-none');
           } else {
@@ -378,29 +356,27 @@
               } else {
                 messageHtml = "Codice <strong>" + codeToSearch + "</strong> trovato";
               }
-              // $('#search-success-alert').html(successHtml).removeClass('d-none');
             } else {
               if ("" != selectedSearchBrand) {
                 messageHtml = "Elenco codici trovati per il brand <strong>" + selectedSearchBrand + "</strong>";
               } else {
                 messageHtml = "Elenco codici trovati";
               }
-              // $('#search-alert').html(messageHtml);
             }
             $('#search-alert').html(messageHtml).removeClass('d-none');
-            var tableStr = "<table class='table table-striped text-center'><thead><tr><th>Codice</th><th>Brand</th></tr></thead><tbody>";
+            var tableStr = "<table class='table table-striped text-center'><thead><tr><th>Codice</th><th>Brand</th><th>Data</th></tr></thead><tbody>";
             response.pictures.forEach(function(element) {
-              tableStr += "<tr><td>" + element.picture_name + "</td><td>" + capital_letter(element.brand.replace('-', ' ')) + "</td></tr>";
+              tableStr += "<tr><td>" + element.picture_name + "</td><td>" + capital_letter(element.brand.replace('-', ' ')) + "</td><td>" + formatDate(new Date(element.date)); + "</td></tr>";
             });
             tableStr += "</tbody>";
             tableStr += "</table>";
             $('#codes-list').append(tableStr);
+            $('#codes-list>table').DataTable({
+              "paging": false,
+              "info": false,
+              "searching": false
+            });
             $('#export').removeClass('d-none');
-            // var alertHtml = "Codice <strong>" + codeToSearch + "</strong> trovato";
-            // if(selectedSearchBrand != ""){
-            //   alertHtml += " nel brand <strong>" + selectedSearchBrand + "</strong>";
-            // }
-            // $('#search-danger-alert').html(alertHtml).removeClass('d-none');
           }
         },
         error: function(xhr, status, error) {
@@ -412,13 +388,6 @@
           $('#loading-search-wrapper').addClass('d-none');
         }
       });
-
-
-      // if (codeToSearch == "") {
-      //   remote.dialog.showErrorBox("Impossibile completare l'operazione", "Non è stato inserito alcun codice da ricercare");
-      //   $('#searchCodeBtn').attr('disabled', false);
-      // } else {
-      // }
     });
 
     /*
@@ -426,13 +395,8 @@
      */
 
     $("#export").click(function(event) {
-      // CSV
       var args = [$('#codes-list>table'), 'export.csv'];
-
       exportTableToCSV.apply(this, args);
-
-      // If CSV, don't do event.preventDefault() or return false
-      // We actually need this to be a typical hyperlink
     });
 
     /*
@@ -440,11 +404,8 @@
      */
 
     $('#code-to-search').on("keyup", function(event) {
-      // Cancel the default action, if needed
       event.preventDefault();
-      // Number 13 is the "Enter" key on the keyboard
       if (event.keyCode === 13) {
-        // Trigger the button element with a click
         $('#searchCodeBtn').trigger('click');
       }
     });
@@ -499,7 +460,7 @@
      */
 
     function exportTableToCSV($table, filename) {
-      var $rows = $table.find('tr:has(td)'),
+      var $rows = $table.find('tr:not.date:has(td)'),
         // Temporary delimiter characters unlikely to be typed by keyboard
         // This is to avoid accidentally splitting the actual contents
         tmpColDelim = String.fromCharCode(11), // vertical tab character
@@ -544,6 +505,19 @@
           'target': '_blank'
         });
       }
+    }
+
+    function formatDate(date) {
+      var monthNames = [
+        "January", "February", "March",
+        "April", "May", "June", "July",
+        "August", "September", "October",
+        "November", "December"
+      ];
+      var day = date.getDate();
+      var monthIndex = date.getMonth();
+      var year = date.getFullYear();
+      return day + '/' + monthIndex + '/' + year;
     }
   </script>
 </body>

@@ -69,8 +69,13 @@
           </div>
           <input type="text" id="code-to-search" class="form-control" placeholder="" aria-label="Codice" aria-describedby="basic-addon2">
           <div class="input-group-append">
-            <button class="btn btn-outline-primary" type="button" id="searchCodeBtn">Cerca</button>
+            <select class="custom-select" id="brand-search-select">
+              <option value="" selected>Brand</option>
+            </select>
           </div>
+        </div>
+        <div class="mb-5">
+          <button class="btn btn-outline-primary" type="button" id="searchCodeBtn">Cerca</button>
         </div>
         <div id="loading-search-wrapper" class="d-none">
           <div class="la-line-spin-fade d-inline-block align-middle">
@@ -85,8 +90,12 @@
           </div>
           <span class="align-middle">Ricerca in corso...</span>
         </div>
-        <div class="alert alert-success d-none" role="alert" id="search-success-alert"></div>
-        <div class="alert alert-danger d-none" role="alert" id="search-danger-alert"></div>
+        <!-- <div class="alert alert-success d-none" role="alert" id="search-success-alert"></div>
+        <div class="alert alert-danger d-none" role="alert" id="search-danger-alert"></div> -->
+        <div class="alert alert-dark d-none" role="alert" id="search-alert"></div>
+        <div class="my-4">
+          <a class="btn btn-outline-primary d-none" id="export">Esporta CSV</a>
+        </div>
         <div id="codes-list"></div>
       </div>
     </div>
@@ -110,97 +119,134 @@
     var searchUrl = urlRoot + "checkIfPictureExists";
     var retriveBrandsUrl = urlRoot + "retriveBrands";
     var appVersion = require('electron').remote.app.getVersion();
+    var responsePictures = {};
     remote.getCurrentWindow().setMinimumSize(500, 500);
 
 
     /*
      * Menu Voices
      */
-     // {
-     //       label: 'Edit',
-     //       submenu: [
-     //         {role: 'undo'},
-     //         {role: 'redo'},
-     //         {type: 'separator'},
-     //         {role: 'cut'},
-     //         {role: 'copy'},
-     //         {role: 'paste'},
-     //         {role: 'pasteandmatchstyle'},
-     //         {role: 'delete'},
-     //         {role: 'selectall'}
-     //       ]
-     //     },
-     var  template = [
-     {
-       label: 'Edit',
-       submenu: [
-         {role: 'undo'},
-         {role: 'redo'},
-         {type: 'separator'},
-         {role: 'cut'},
-         {role: 'copy'},
-         {role: 'paste'},
-         {role: 'pasteandmatchstyle'},
-         {role: 'delete'},
-         {role: 'selectall'}
-       ]
-     }
-   ];
+    // {
+    //       label: 'Edit',
+    //       submenu: [
+    //         {role: 'undo'},
+    //         {role: 'redo'},
+    //         {type: 'separator'},
+    //         {role: 'cut'},
+    //         {role: 'copy'},
+    //         {role: 'paste'},
+    //         {role: 'pasteandmatchstyle'},
+    //         {role: 'delete'},
+    //         {role: 'selectall'}
+    //       ]
+    //     },
+    var template = [{
+      label: 'Edit',
+      submenu: [{
+          role: 'undo'
+        },
+        {
+          role: 'redo'
+        },
+        {
+          type: 'separator'
+        },
+        {
+          role: 'cut'
+        },
+        {
+          role: 'copy'
+        },
+        {
+          role: 'paste'
+        },
+        {
+          role: 'pasteandmatchstyle'
+        },
+        {
+          role: 'delete'
+        },
+        {
+          role: 'selectall'
+        }
+      ]
+    }];
 
-   if (process.platform === 'darwin') {
-     template.unshift({
-       label: app.getName(),
-       submenu: [
-         {role: 'about'},
-         {type: 'separator'},
-         {role: 'services', submenu: []},
-         {type: 'separator'},
-         {role: 'hide'},
-         {role: 'hideothers'},
-         {role: 'unhide'},
-         {type: 'separator'},
-         {role: 'quit'}
-       ]
-     })
+    if (process.platform === 'darwin') {
+      template.unshift({
+        label: app.getName(),
+        submenu: [{
+            role: 'about'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'services',
+            submenu: []
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'hide'
+          },
+          {
+            role: 'hideothers'
+          },
+          {
+            role: 'unhide'
+          },
+          {
+            type: 'separator'
+          },
+          {
+            role: 'quit'
+          }
+        ]
+      })
 
-     // Edit menu
-     template[1].submenu.push(
-       {type: 'separator'},
-       {
-         label: 'Speech',
-         submenu: [
-           {role: 'startspeaking'},
-           {role: 'stopspeaking'}
-         ]
-       }
-     )
+      // Edit menu
+      template[1].submenu.push({
+        type: 'separator'
+      }, {
+        label: 'Speech',
+        submenu: [{
+            role: 'startspeaking'
+          },
+          {
+            role: 'stopspeaking'
+          }
+        ]
+      })
 
-     // Window menu
-     // template[3].submenu = [
-     //   {role: 'close'},
-     //   {role: 'minimize'},
-     //   {role: 'zoom'},
-     //   {type: 'separator'},
-     //   {role: 'front'}
-     // ]
-   }
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+      // Window menu
+      // template[3].submenu = [
+      //   {role: 'close'},
+      //   {role: 'minimize'},
+      //   {role: 'zoom'},
+      //   {type: 'separator'},
+      //   {role: 'front'}
+      // ]
+    }
+    // Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
     $('#version').html(appVersion);
     console.log(ipcRenderer);
     ipcRenderer.on('updateReady', function(event, text) {
       console.log("Update Ready");
-        $('#update-info').removeClass('d-none');
+      $('#update-info').removeClass('d-none');
     });
 
     $.ajax({
       type: "GET",
       url: retriveBrandsUrl,
       dataType: 'json',
-      success: function(response){
-        response.brands.forEach(function(element){
+      success: function(response) {
+        response.brands.forEach(function(element) {
           console.log(element.brand);
           $('#brand-select').append('<option value="' + element.brand + '">' + element.brand + '</option>');
+          $('#brand-search-select').append('<option value="' + element.brand + '">' + element.brand + '</option>');
         });
       },
       error: function(xhr, status, error) {
@@ -240,9 +286,9 @@
             var request = {
               pictures: codesArray,
             };
-            if(selectedBrand != ""){
+            if (selectedBrand != "") {
               request.brand = selectedBrand;
-            } else if(newBrand != ""){
+            } else if (newBrand != "") {
               request.brand = newBrand;
             }
             $.ajax({
@@ -253,8 +299,9 @@
               success: function(response) {
                 console.log("Upload response", response);
                 $("#upload-success-alert").removeClass('d-none');
-                if(newBrand != ""){
+                if (newBrand != "") {
                   $('#brand-select').append('<option value="' + newBrand + '">' + newBrand + '</option>');
+                  $('#brand-search-select').append('<option value="' + newBrand + '">' + newBrand + '</option>');
                 }
                 $("#new-brand-input").val('');
               },
@@ -283,50 +330,114 @@
     $('#searchCodeBtn').click(function(event) {
       $("#search-success-alert").addClass('d-none');
       $("#search-danger-alert").addClass('d-none');
+      $("#search-alert").addClass('d-none');
+      $('#export').addClass('d-none');
       $('#searchCodeBtn').attr('disabled', true);
-      $('#codes-list').html('');
+      var selectedSearchBrand = $("#brand-search-select").val();
       var codeToSearch = $('#code-to-search').val();
-      if (codeToSearch == "") {
-        remote.dialog.showErrorBox("Impossibile completare l'operazione", "Non è stato inserito alcun codice da ricercare");
-        $('#searchCodeBtn').attr('disabled', false);
-      } else {
-        $('#loading-search-wrapper').removeClass('d-none');
-        var request = {
-          picture_name: encodeURI(codeToSearch),
-        };
-        $('#search-success-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " trovato");
-        $('#search-danger-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " non trovato");
-        $.ajax({
-          type: 'GET',
-          url: searchUrl,
-          data: request,
-          dataType: 'json',
-          success: function(response) {
-            console.log("Search response", response);
-            if (!response.exists) {
-              $('#search-success-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " non trovato").removeClass('d-none');
+      $('#codes-list').html('');
+      $('#loading-search-wrapper').removeClass('d-none');
+      var request = {
+        picture_name: encodeURI(codeToSearch),
+        brand: selectedSearchBrand,
+      };
+      // $('#search-success-alert').html("");
+      // $('#search-danger-alert').html("");
+      $('#search-alert').html("");
+      $.ajax({
+        type: 'GET',
+        url: searchUrl,
+        data: request,
+        dataType: 'json',
+        success: function(response) {
+          console.log("Search response", response);
+          var messageHtml = "";
+          if (!response.exists) {
+            if ("" != codeToSearch) {
+              if ("" != selectedSearchBrand) {
+                messageHtml = "Codice <strong>" + codeToSearch + "</strong> non trovato nel brand <strong>" + selectedSearchBrand + "</strong>";
+              } else {
+                messageHtml = "Codice <strong>" + codeToSearch + "</strong> non trovato";
+              }
+              // $('#search-success-alert').html(successHtml).removeClass('d-none');
             } else {
-              var tableStr = "<table class='table table-striped text-center'><thead><tr><th>Codice</th><th>Brand</th></tr></thead><tbody>";
-              response.pictures.forEach(function(element) {
-                tableStr += "<tr><td>" + element.picture_name + "</td><td>" + capital_letter(element.brand.replace('-', ' ')) + "</td></tr>";
-              });
-              tableStr += "</tbody>";
-              tableStr += "</table>";
-              $('#codes-list').append(tableStr);
-              $('#search-danger-alert').html("Codice " + "<strong>" + codeToSearch + "</strong>" + " trovato").removeClass('d-none');
+              if ("" != selectedSearchBrand) {
+                messageHtml = "Nessun codice trovato per il brand <strong>" + selectedSearchBrand + "</strong>";
+              } else {
+                messageHtml = "Nessun Codice Trovato";
+              }
+              // $('#search-alert').html(messageHtml);
             }
-          },
-          error: function(xhr, status, error) {
-            var err = JSON.parse(xhr.responseText);
-            remote.dialog.showErrorBox("Error " + err.data.status, err.message);
-          },
-          complete: function() {
-            $('#searchCodeBtn').attr('disabled', false);
-            $('#loading-search-wrapper').addClass('d-none');
+            $('#search-alert').html(messageHtml).removeClass('d-none');
+          } else {
+            responsePictures = response.pictures;
+            console.log(responsePictures);
+            if ("" != codeToSearch) {
+              if ("" != selectedSearchBrand) {
+                messageHtml = "Codice <strong>" + codeToSearch + "</strong> trovato nel brand <strong>" + selectedSearchBrand + "</strong>";
+              } else {
+                messageHtml = "Codice <strong>" + codeToSearch + "</strong> trovato";
+              }
+              // $('#search-success-alert').html(successHtml).removeClass('d-none');
+            } else {
+              if ("" != selectedSearchBrand) {
+                messageHtml = "Elenco codici trovati per il brand <strong>" + selectedSearchBrand + "</strong>";
+              } else {
+                messageHtml = "Elenco codici trovati";
+              }
+              // $('#search-alert').html(messageHtml);
+            }
+            $('#search-alert').html(messageHtml).removeClass('d-none');
+            var tableStr = "<table class='table table-striped text-center'><thead><tr><th>Codice</th><th>Brand</th></tr></thead><tbody>";
+            response.pictures.forEach(function(element) {
+              tableStr += "<tr><td>" + element.picture_name + "</td><td>" + capital_letter(element.brand.replace('-', ' ')) + "</td></tr>";
+            });
+            tableStr += "</tbody>";
+            tableStr += "</table>";
+            $('#codes-list').append(tableStr);
+            $('#export').removeClass('d-none');
+            // var alertHtml = "Codice <strong>" + codeToSearch + "</strong> trovato";
+            // if(selectedSearchBrand != ""){
+            //   alertHtml += " nel brand <strong>" + selectedSearchBrand + "</strong>";
+            // }
+            // $('#search-danger-alert').html(alertHtml).removeClass('d-none');
           }
-        });
-      }
+        },
+        error: function(xhr, status, error) {
+          var err = JSON.parse(xhr.responseText);
+          remote.dialog.showErrorBox("Error " + err.data.status, err.message);
+        },
+        complete: function() {
+          $('#searchCodeBtn').attr('disabled', false);
+          $('#loading-search-wrapper').addClass('d-none');
+        }
+      });
+
+
+      // if (codeToSearch == "") {
+      //   remote.dialog.showErrorBox("Impossibile completare l'operazione", "Non è stato inserito alcun codice da ricercare");
+      //   $('#searchCodeBtn').attr('disabled', false);
+      // } else {
+      // }
     });
+
+    /*
+     * Show save in CSV dialog
+     */
+
+    $("#export").click(function(event) {
+      // CSV
+      var args = [$('#codes-list>table'), 'export.csv'];
+
+      exportTableToCSV.apply(this, args);
+
+      // If CSV, don't do event.preventDefault() or return false
+      // We actually need this to be a typical hyperlink
+    });
+
+    /*
+     * Begin Search on Enter pressed
+     */
 
     $('#code-to-search').on("keyup", function(event) {
       // Cancel the default action, if needed
@@ -380,6 +491,59 @@
         str[i] = str[i][0].toUpperCase() + str[i].substr(1);
       }
       return str.join(" ");
+    }
+
+
+    /*
+     * Save HTML table into CSV
+     */
+
+    function exportTableToCSV($table, filename) {
+      var $rows = $table.find('tr:has(td)'),
+        // Temporary delimiter characters unlikely to be typed by keyboard
+        // This is to avoid accidentally splitting the actual contents
+        tmpColDelim = String.fromCharCode(11), // vertical tab character
+        tmpRowDelim = String.fromCharCode(0), // null character
+        // actual delimiter characters for CSV format
+        colDelim = '","',
+        rowDelim = '"\r\n"',
+        // Grab text from table into CSV formatted string
+        csv = '"' + $rows.map(function(i, row) {
+          var $row = $(row),
+            $cols = $row.find('td');
+          return $cols.map(function(j, col) {
+            var $col = $(col),
+              text = $col.text();
+            return text.replace(/"/g, '""'); // escape double quotes
+          }).get().join(tmpColDelim);
+        }).get().join(tmpRowDelim)
+        .split(tmpRowDelim).join(rowDelim)
+        .split(tmpColDelim).join(colDelim) + '"';
+      // Deliberate 'false', see comment below
+      if (false && window.navigator.msSaveBlob) {
+        var blob = new Blob([decodeURIComponent(csv)], {
+          type: 'text/csv;charset=utf8'
+        });
+        window.navigator.msSaveBlob(blob, filename);
+      } else if (window.Blob && window.URL) {
+        // HTML5 Blob
+        var blob = new Blob([csv], {
+          type: 'text/csv;charset=utf8'
+        });
+        var csvUrl = URL.createObjectURL(blob);
+        $(this).attr({
+          'download': filename,
+          'href': csvUrl
+        });
+      } else {
+        // Data URI
+        var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+        $(this).attr({
+          'download': filename,
+          'href': csvData,
+          'target': '_blank'
+        });
+      }
     }
   </script>
 </body>
